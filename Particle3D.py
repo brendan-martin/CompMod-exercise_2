@@ -101,3 +101,5 @@ Class Particle3D(object):
         self.x = self.x + dt*self.v_x + 0.5*dt**2*force_x/self.m
         self.y = self.y + dt*self.v_y + 0.5*dt**2*force_y/self.m
         self.z = self.z + dt*self.v_z + 0.5*dt**2*force_z/self.m
+
+well 
