@@ -1,54 +1,47 @@
-"""Particle3D Class"""
+"""
+ CMod Ex3: Particle3D, a class to describe 3D particles
+"""
 
-Class Particle3D(object):
+import numpy as np
+
+class Particle3D(object):
     """
-    Class to describe 3D particles
+    Class to describe 1D particles.
 
     Properties:
-    x(float)-position along the x direction
-    y(float)-position along the y direction
-    z_position(float)-position along the z direction
-
-    v_x(float)-velocity along the x direction
-    v_y(float)-velocity along the y direction
-    v_z(float)-velocity along the z direction
-
-    mass(float)-particle mass
+    position(numpy array) - position vector
+    velocity(numpy array) - velocity vector
+    mass(float) - particle mass
 
     Methods:
-    *formatted output
-    *kinetic energy
-    *first order velocity update
-    *first and second order position updates
+    * formatted output
+    * kinetic energy
+    * first-order velocity update
+    * first- and second order position updates
     """
 
-    def __init__(self,x_position,y_position,z_position,x_velocity,y_velocity,z_velocity,mass):
+    def __init__(self, pos, vel, mass,label):
         """
         Initialise a Particle3D instance
 
-        :param x_position: x position as float
-        :param y_position: x position as float
-        :param z_position: x position as float
-        :param x_velocity: x velocity as float
-        :param y_velocity: y velocity as float
-        :param z_velocity: z velocity as float
+        :param pos: position as numpy array
+        :param vel: velocity as numpy array
         :param mass: mass as float
         """
 
-        self.x=x_position
-        self.y=y_position
-        self.z=z_position
-        self.v_x=x_velocity
-        self.v_y=y_velocity
-        self.v_z=z_velocity
-        self.m=mass
+        self.position = pos
+        self.velocity = vel
+        self.mass = mass
+        self.label=label
 
-    def __str__(self):
+    def __str__(self,label):
         """
-        Define output format
+        Define output format.
+        For particle p=([1.0,2.0,3.0], [4.0,5.0,6.0], 7.0,barry) this will print as
+        "label=barry, x = 1.0, y=2.0, z=3.0, m = 7.0"
         """
 
-        return "x="+str(self.x)+"y="+str(self.y)+"x="+str(self.y)+"v_x="+str(self.v_x)+"v_y="+str(self.v_y)+"v_z="+str(self.v_z)+"m="+str(self.m)
+        return "x = " + str(self.position[0]) + "y = " + str(self.position[1]) + "z = " + str(self.position[2]) + " m = " + str(self.mass)
 
     def kinetic_energy(self):
         """
@@ -56,26 +49,22 @@ Class Particle3D(object):
         1/2*mass*vel^2
         """
 
-        return 0.5*self.m*((self.v_x**2)+(self.v_y**2)+(self.v_z**2))
+        return 0.5*self.mass*np.inner(self.velocity,self.velocity)
 
-    #Time integration Methods
+    # Time integration methods
 
-     def leap_velocity(self, dt, force_x,force_y,force_z):
+    def leap_velocity(self, dt, force):
         """
         First-order velocity update,
         v(t+dt) = v(t) + dt*F(t)
 
         :param dt: timestep as float
-        :param force_x: force on particle in the x direction as float
-        :param force_y: force on particle in the y direction as float
-        :param force_z: force on particle in the z direction as float
+        :param force: force on particle as float
         """
 
-        self.v_x = self.v_x + dt*force_x/self.m
-        self.v_y = self.v_y + dt*force_y/self.m
-        self.v_z = self.v_z + dt*force_z/self.m
+        self.velocity = self.velocity + (dt*force)/self.mass
 
-     def leap_pos1st(self, dt):
+    def leap_pos1st(self, dt):
         """
         First-order position update,
         x(t+dt) = x(t) + dt*v(t)
@@ -83,23 +72,50 @@ Class Particle3D(object):
         :param dt: timestep as float
         """
 
-        self.x = self.x + dt*self.v_x
-        self.y = self.y + dt*self.v_y
-        self.z = self.z + dt*self.v_z
+        self.position = self.position + dt*self.velocity
 
-    def leap_pos2nd(self, dt, force_x,force_y,force_z):
+    def leap_pos2nd(self, dt, force):
         """
         Second-order position update,
         x(t+dt) = x(t) + dt*v(t) + 1/2*dt^2*F(t)
 
-        :param dt: timestep as float
-        :param force_x: current force in x direction as float
-        :param force_y: current force in y direction as float
-        :param force_z: current force in z direction as float
+        :param dt: timestep#read in first line from input file
+    constants_1=infile.readline()
+    #split first line up
+    tokens1=constants.split(",")
+
+    #set up initial parameters for first particle
+    D=tokens1[0]
+    alpha=tokens1[2]
+    r_e=tokens1[1] as float
+        :param force: current force as float
         """
 
-        self.x = self.x + dt*self.v_x + 0.5*dt**2*force_x/self.m
-        self.y = self.y + dt*self.v_y + 0.5*dt**2*force_y/self.m
-        self.z = self.z + dt*self.v_z + 0.5*dt**2*force_z/self.m
+        self.position = self.position + dt*self.velocity + 0.5*dt**2*force/self.mass
 
-well 
+    #Static Method that takes info from a file and creates a particle
+
+    def file_read(file_handle):
+        #read in one line from the file
+        particle_info=file_handle.readline()
+        #split line up
+        tokens=particle_info.split(",")
+        #assign properties of the particle to one of the tokens
+        label=str(tokens[7])
+        pos=np.array([float(tokens[0]),float(tokens[1]),float(tokens[2])])
+        vel=np.array([float(tokens[3]),float(tokens[4]),float(tokens[5])])
+        mass=float(tokens[6])
+
+        return Particle3D(pos,vel,mass,label)
+
+
+
+
+    #Static method to return vectorseparation of two particles
+
+    def separation(p1,p2):
+        """
+        :param p1: first particle
+        :param p2: second particle
+        """
+        return p1.position-p2.position

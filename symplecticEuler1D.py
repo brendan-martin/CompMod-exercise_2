@@ -30,13 +30,13 @@ def force_dw(particle, a, b):
     :param b: parameter b from potential
     :return: force acting on particle as Numpy array
     """
-    
+
     force = -4*a*particle.position**3 + 2*b*particle.position
     return force
 
 def pot_energy_dw(particle, a, b):
     """
-    Method to return potential energy 
+    Method to return potential energy
     of particle in double-well potential
     V(x) = a*x^4 - b*x^2
 
@@ -91,15 +91,15 @@ def main():
     for i in range(numstep):
         # Update particle position
         p1.leap_pos1st(dt)
-        
+
         # Calculate force
         force = force_dw(p1, a, b)
-        # Update particle velocity 
+        # Update particle velocity
         p1.leap_velocity(dt, force)
-        
+
         # Increase time
         time = time + dt
-        
+
         # Output particle information
         energy = p1.kinetic_energy() + pot_energy_dw(p1, a, b)
         outfile.write("{0:f} {1:f} {2:12.8f}\n".format(time,p1.position,energy))
@@ -110,7 +110,7 @@ def main():
         energy_list.append(energy)
 
     # Post-simulation:
-    
+
     # Close output file
     outfile.close()
 
