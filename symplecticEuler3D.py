@@ -56,45 +56,42 @@ def pot_energy_morse(r_12, D, alpha,r_e):
 
 
 def symp_euler(particles,dt,D,alpha,r_e):
-    #create a list to hold the updated positions
-    updated_position=[]
-
-    #create a list to hold the updated velocities
-    updated_velocity=[]
 
     #calculate new position of each particle in the list "particles"
     for i in range(len(particles)):
-        new_pos=particles[i].leap_pos1st(dt)
-        updated_position.append(new_pos)
+        particles[i].leap_pos1st(dt)
 
     for i in range(len(particles)):
+        force=0
         #for each ith updated particle, calculate the total force on that particle by summing pairwise over all other particles
         for j in range(len(particles)):
             #don't calculate the force on the particle due to itself
             if i!=j:
-                force=force_morse(updated_position[i],particles[j], D, alpha,r_e)
-        new_vel=particles[i].leap_velocity(dt,force)
-        updated_velocity.append(new_vel)
+                force=force+force_morse(particles[i],particles[j], D, alpha,r_e)
 
-    #create a list of updated separations between particles
-    separation_list=[]
-    #create a list to hold the pairwise potential energies
-    potential_list=[]
+        particles[i].leap_velocity(dt,force)
+
+    sum(map(lambda x:force(x),particles))
+
+    for i in range(len(particles)):
+        force=sum(map(lambda x: force_morse(particles[i],x, D, alpha,r_e), filter(lambda x: x != particles[i], particles)))
+        particles[i].leap_velocity(dt,force)
+
+    new_pot=0
 
     #loop over all particles calculating distance between each pair of particles and their pairwise potential, making sure not to double count
     for i in range(len(particles)):
+
         for j in range(len(particles)):
+
             if i<j:
-                dist=updated_position[i].append(updated_position[j])
-                potential_energy= pot_energy_morse(dist, D, alpha,r_e)
-                separation_list.append(dist)
-                potential_list.append(potential_energy)
+                r=np.linalg.norm(separation(particles[i],particles[j]))
+
+                new_pot=new_pot+pot_energy_morse(r, D, alpha,r_e)
 
 
-    return updated_position
-    return updated_velocity
-    return separation_list
-    return potential_list
+    return new_pot+sum(map(lambda x: x.kinetic_energy(), particles))
+
 
 
 
@@ -171,10 +168,7 @@ def main():
     # Start the time integration loop
     for i in range(numstep):
         updated_info=[symp_euler(particles,dt,D,alpha,r_e)]
-        updated_position=updated_info[0]
-        updated_velocity=updated_info[1]
-        updated_separation=updated_info[2]
-        updated_potential=updated_info[3]
+
 
         #calculate new total potential energy
         new_total_pot=sum(i for i in updated_potential)
