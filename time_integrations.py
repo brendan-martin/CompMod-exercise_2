@@ -72,26 +72,61 @@ def symp_euler(particles,dt,D,alpha,r_e):
         for j in range(len(particles)):
             #don't calculate the force on the particle due to itself
             if i!=j:
-                force=force+force_morse(particles[i],particles[j], D, alpha,r_e)
+                force+=force_morse(particles[i],particles[j], D, alpha,r_e)
 
         particles[i].leap_velocity(dt,force)
 
 
-    for i in range(len(particles)):
-        force=sum(map(lambda x: force_morse(particles[i],x, D, alpha,r_e), filter(lambda x: x != particles[i], particles)))
-        particles[i].leap_velocity(dt,force)
+
+    #for i in range(len(particles)):
+        #force=sum(map(lambda x: force_morse(particles[i],x, D, alpha,r_e), filter(lambda x: x != particles[i], particles)))
+        #particles[i].leap_velocity(dt,force)
 
     new_pot=0
 
     #loop over all particles calculating distance between each pair of particles and their pairwise potential, making sure not to double count
     for i in range(len(particles)):
-
         for j in range(len(particles)):
-
             if i<j:
                 r=np.linalg.norm(particles[i].separation(particles[j]))
-
                 new_pot=new_pot+pot_energy_morse(r, D, alpha,r_e)
+
+    #calculate the total energy after the time step
+    total_energy=new_pot+sum(map(lambda x: x.kinetic_energy(), particles))
+
+    #return the list separations and the total enery as a list
+    return [separations,total_energy]
+
+
+def verlet(particles,dt,D,alpha,r_e):
+    #calculate the force on each particle and store in a list
+    origional_force=[force_morse(i,j,D, alpha,r_e) for i in particles for j in particles if i!=j]
+
+    #calculate new position of each particle in the list "particles"
+    for i in particles:
+        force=0
+        for j in particles:
+            if i!=j:
+                force+=force_morse(i,j,D, alpha,r_e)
+        i.leap_pos2nd(dt, force)
+
+    #calaculate the new forces on each particle and put them in a list
+    new_force=[force_morse(i,j,D, alpha,r_e) for i in particles for j in particles if i!=j]
+
+    #calaculate the new velocities of each particle
+    for i in range(len(particles)):
+        particles[i].leap_velocity(dt,0.5*(origional_force[i]+new_force[i]))
+
+    #calculate new separations of particles (pairwise) and return as a list, called separations
+    separations=[np.linalg.norm(i.separation(j)) for i in particles for j in particles if i!=j]
+
+    #loop over all particles calculating distance between each pair of particles and their pairwise potential, making sure not to double count
+    for i in range(len(particles)):
+        new_pot=0
+        for j in range(len(particles)):
+            if i<j:
+                r=np.linalg.norm(particles[i].separation(particles[j]))
+                new_pot+=pot_energy_morse(r, D, alpha,r_e)
 
     #calculate the total energy after the time step
     total_energy=new_pot+sum(map(lambda x: x.kinetic_energy(), particles))
@@ -102,14 +137,11 @@ def symp_euler(particles,dt,D,alpha,r_e):
 
 
 
-
-
-
 def main():
 
-    if len(sys.argv)!=3:
+    if len(sys.argv)!=4:
         print("Wrong number of arguments.")
-        print("Usage: " + sys.argv[0] + "<input file>" + " <output file>")
+        print("Usage: " + sys.argv[0] + "<input file>" + " <output file>" + "method of time integration:either 'euler' or 'verlet'")
         quit()
     else:
         outfile_name = sys.argv[2]
@@ -121,31 +153,19 @@ def main():
     #read in input file
     infile=open(infile_name, "r")
 
-
-
     #Get the specific constants for the particle from the input file
-    #read in first line from input file
-    constants_1=infile.readline()
+    #read in first line from input filenew_data=symp_euler(particles,dt,D,alpha,r_e)
+    constants=infile.readline()
     #split first line up
-    tokens1=constants_1.split(",")
+    tokens=constants.split(",")
 
-    #set up initial parameters for first particle
-    D=tokens1[0]
-    alpha=tokens1[2]
-    r_e=tokens1[1]
+    #set up initial parameters for particles
+    D=tokens[0]
+    alpha=tokens[2]
+    r_e=tokens[1]
 
-    #read in second line from input file
-    constants_2=infile.readline()
-    #split second line up
-    tokens2=constants_2.split(",")
-
-    #set up initial parameters for second particle
-    D_2=tokens2[0]
-    alpha_2=tokens2[2]
-    r_e2=tokens2[1]
-
-    dt = 0.01
-    numstep = 5000
+    dt = 0.001
+    numstep = 10000
     time = 0.0
 
     #set up the initial state of the particles
@@ -172,12 +192,13 @@ def main():
     distance_list = []
     energy_list = []
 
-
-
     # Start the time integration loop
     for i in range(numstep):
         #use symplectic euler to get the new separations and new total energy after the time step
-        new_data=symp_euler(particles,dt,D,alpha,r_e)
+        if sys.argv[3]=='euler':
+            new_data=symp_euler(particles,dt,D,alpha,r_e)
+        else:
+            new_data=verlet(particles,dt,D,alpha,r_e)
 
         #get list of new separations
         sep_list=new_data[0]
@@ -218,6 +239,7 @@ def main():
     pyplot.ylabel('Energy')
     pyplot.plot(time_list, energy_list)
     pyplot.show()
+
 
 
 # Execute main method:
