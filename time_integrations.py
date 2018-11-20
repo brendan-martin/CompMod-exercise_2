@@ -52,7 +52,7 @@ def pot_energy_morse(r_12, D, alpha,r_e):
 
     """
 
-    potential=float(D)*(((float(1.0)-m.exp(-float(alpha)*(float(r_12)-float(r_e))))**float(2.0))-float(1.0))
+    potential=float(D)*(((1.0-m.exp(-float(alpha)*(float(r_12)-float(r_e))))**2.0)-1.0)
     return potential
 
 
@@ -63,24 +63,24 @@ def symp_euler(particles,dt,D,alpha,r_e):
         particles[i].leap_pos1st(dt)
 
     #calculate new separations of particles (pairwise) and return as a list, called separations
-    #separations=map(lambda x: x.separation(particles[i]),filter(lambda x: x != particles[i],particles))
+    separations=map(lambda x: x.separation(particles[i]),filter(lambda x: x != particles[i],particles))
     separations=[np.linalg.norm(i.separation(j)) for i in particles for j in particles if i!=j]
 
-    for i in range(len(particles)):
-        force=0
-        #for each ith updated particle, calculate the total force on that particle by summing pairwise over all other particles
-        for j in range(len(particles)):
-            #don't calculate the force on the particle due to itself
-            if i!=j:
-                force+=force_morse(particles[i],particles[j], D, alpha,r_e)
-
-        particles[i].leap_velocity(dt,force)
-
-
-
     #for i in range(len(particles)):
-        #force=sum(map(lambda x: force_morse(particles[i],x, D, alpha,r_e), filter(lambda x: x != particles[i], particles)))
+        #force=0
+        #for each ith updated particle, calculate the total force on that particle by summing pairwise over all other particles
+        #for j in range(len(particles)):
+            #don't calculate the force on the particle due to itself
+            #if i!=j:
+                #force+=force_morse(particles[i],particles[j], D, alpha,r_e)
+
         #particles[i].leap_velocity(dt,force)
+
+
+
+    for i in range(len(particles)):
+        force=sum(map(lambda x: force_morse(particles[i],x, D, alpha,r_e), filter(lambda x: x != particles[i], particles)))
+        particles[i].leap_velocity(dt,force)
 
     new_pot=0
 
@@ -99,7 +99,7 @@ def symp_euler(particles,dt,D,alpha,r_e):
 
 
 def verlet(particles,dt,D,alpha,r_e):
-    #calculate the force on each particle and store in a list
+    #calculate the force on each particle and store in a listnew_pot=0
     origional_force=[force_morse(i,j,D, alpha,r_e) for i in particles for j in particles if i!=j]
 
     #calculate new position of each particle in the list "particles"
@@ -120,14 +120,15 @@ def verlet(particles,dt,D,alpha,r_e):
     #calculate new separations of particles (pairwise) and return as a list, called separations
     separations=[np.linalg.norm(i.separation(j)) for i in particles for j in particles if i!=j]
 
+    new_pot=0
     #loop over all particles calculating distance between each pair of particles and their pairwise potential, making sure not to double count
     for i in range(len(particles)):
-        new_pot=0
         for j in range(len(particles)):
             if i<j:
                 r=np.linalg.norm(particles[i].separation(particles[j]))
                 new_pot+=pot_energy_morse(r, D, alpha,r_e)
 
+    #[pot_energy_morse(i, j) for i in particles for j in particles if i < j]
     #calculate the total energy after the time step
     total_energy=new_pot+sum(map(lambda x: x.kinetic_energy(), particles))
 
@@ -164,8 +165,8 @@ def main():
     alpha=tokens[2]
     r_e=tokens[1]
 
-    dt = 0.001
-    numstep = 10000
+    dt = 0.01
+    numstep = 2000
     time = 0.0
 
     #set up the initial state of the particles
@@ -226,15 +227,22 @@ def main():
     # Close output file
     outfile.close()
 
+    sep_vector=p1.separation(p2)
     # Plot particle trajectory to screen
-    pyplot.title('Symplectic Euler: separation vs time')
+    if sys.argv[3]=='euler':
+        pyplot.title('Symplectic Euler: separation vs time')
+    else:
+        pyplot.title('Velocity verlet: separation vs time')
     pyplot.xlabel('Time')
     pyplot.ylabel('Separation')
     pyplot.plot(time_list, distance_list)
     pyplot.show()
 
     # Plot particle energy to screen
-    pyplot.title('Symplectic Euler: total energy vs time')
+    if sys.argv[3]=='euler':
+        pyplot.title('Symplectic Euler: total energy vs time')
+    else:
+        pyplot.title('Velocity verlet: total energy vs time')
     pyplot.xlabel('Time')
     pyplot.ylabel('Energy')
     pyplot.plot(time_list, energy_list)
