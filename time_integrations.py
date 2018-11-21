@@ -99,9 +99,8 @@ def symp_euler(particles,dt,D,alpha,r_e):
 
 
 def verlet(particles,dt,D,alpha,r_e):
-    #calculate the force on each particle and store in a listnew_pot=0
-    original_force=[force_morse(i,j,D, alpha,r_e) for i in particles for j in particles if i!=j]
-
+    #calculate the force on each particle and store in a list
+    original_force=np.array([force_morse(i,j,D, alpha,r_e) for i in particles for j in particles if i!=j])
 
     #calculate new position of each particle in the list "particles"
     for i in particles:
@@ -112,17 +111,25 @@ def verlet(particles,dt,D,alpha,r_e):
         i.leap_pos2nd(dt, force)
 
     #calaculate the new forces on each particle and put them in a list
-    new_force=[force_morse(i,j,D, alpha,r_e) for i in particles for j in particles if i!=j]
+    new_force=np.array([force_morse(i,j,D, alpha,r_e) for i in particles for j in particles if i!=j])
 
 
+
+
+    jump_force=[(1/2)*(np.add(new_force[i],original_force[i])) for i in range(len(particles))]
+
+    new_v=[]
+    for i in range(len(particles)):
+        particles[i].leap_velocity(dt,jump_force[i])
+        new_v.append(particles[i].velocity)
 
     #calaculate the new velocities of each particle
-    for i in range(len(particles)):
-        for j in range(len(original_force)):
-            if j!=i:
-                earlier=np.sum(original_force[j],axis=0)
-                later=np.sum(new_force[j],axis=0)
-        particles[i].leap_velocity(dt,0.5*(earlier+later))
+    #for i in range(len(particles)):
+    #    for j in range(len(original_force)):
+    #        if j!=i:
+    #            earlier=np.sum(original_force[j],axis=0)
+    #            later=np.sum(new_force[j],axis=0)
+    #    particles[i].leap_velocity(dt,0.5*(earlier+later))
 
     #calculate new separations of particles (pairwise) and return as a list, called separations
     separations=[np.linalg.norm(i.separation(j)) for i in particles for j in particles if i!=j]
@@ -135,12 +142,16 @@ def verlet(particles,dt,D,alpha,r_e):
                 r=np.linalg.norm(particles[i].separation(particles[j]))
                 new_pot+=pot_energy_morse(r, D, alpha,r_e)
 
+
     #[pot_energy_morse(i, j) for i in particles for j in particles if i < j]
     #calculate the total energy after the time step
-    total_energy=new_pot+sum(map(lambda x: x.kinetic_energy(), particles))
+    #total_energy=new_pot+sum(map(lambda x: x.kinetic_energy(), particles))
+
+    total_energy=new_pot+sum(i.kinetic_energy() for i in particles)
+
 
     #return the list separations and the total enery as a list
-    return [separations,total_energy]
+    return [separations,total_energy,original_force]
 
 
 def v_verlet(p1,p2,dt,D,alpha,r_e):
@@ -159,7 +170,9 @@ def v_verlet(p1,p2,dt,D,alpha,r_e):
 
     tot_ener= pot_energy_morse(separ, D, alpha,r_e)+p1.kinetic_energy()+p2.kinetic_energy()
 
-    return [separ,tot_ener]
+    jump=[force,-force]
+
+    return [separ,tot_ener,jump]
 
 def main():
 
@@ -178,7 +191,7 @@ def main():
     infile=open(infile_name, "r")
 
     #Get the specific constants for the particle from the input file
-    #read in first line from input filenew_data=symp_euler(particles,dt,D,alpha,r_e)
+    #read in first line from input file
     constants=infile.readline()
     #split first line up
     tokens=constants.split(",")
@@ -189,7 +202,7 @@ def main():
     r_e=tokens[1]
 
     dt = 0.01
-    numstep = 2000
+    numstep = 20
     time = 0.0
 
     #set up the initial state of the particles
@@ -220,7 +233,7 @@ def main():
     for i in range(numstep):
         #use symplectic euler to get the new separations and new total energy after the time step
         if sys.argv[3]=='euler':
-            new_data=symp_euler(particles,dt,D,alpha,r_e)
+            new_data=symp_euler(p1,p2,dt,D,alpha,r_e)
         else:
             new_data=verlet(particles,dt,D,alpha,r_e)
 
@@ -245,6 +258,7 @@ def main():
         # Increase time
         time = time + dt
 
+        print(new_data[2])
     # Post-simulation:
 
     # Close output file
