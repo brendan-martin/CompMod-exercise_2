@@ -121,38 +121,60 @@ def main():
     #write the initial time, initial separation and initial total energy to the output file
     outfile.write("{0:f} {1:f} {2:12.8f}\n".format(time,distance,energy))
 
-    # Initialise data lists for plotting later
-    time_list = []
-    distance_list = []
-    energy_list = []
+    constant=dt*numstep
+
+    dt_list=[]
+
+    fluc_list=[]
 
     # Start the time integration loop
-    
-    for i in range(numstep):
-        #use v_verlet to get the new separations and new total energy after the time step
 
-        new_data=v_verlet(p1,p2,dt,D,alpha,r_e)
+    for dt in np.linspace(0.01,0.5,300):
 
-        #get new separation
-        sep=new_data[0]
+        # Initialise data lists for plotting later
+        time_list = []
+        distance_list = []
+        energy_list = []
 
-        #get  new total energy
-        new_energy=new_data[1]
+        numstep=int(constant/dt)
+
+        for i in range(numstep):
+            #use v_verlet to get the new separations and new total energy after the time step
+
+            new_data=v_verlet(p1,p2,dt,D,alpha,r_e)
+
+            #get new separation
+            sep=new_data[0]
+
+            #get  new total energy
+            new_energy=new_data[1]
 
 
-        # Output particle information
-        outfile.write("{0:f} {1:f} {2:12.8f}\n".format(time,sep,new_energy))
+            # Output particle information
+            outfile.write("{0:f} {1:f} {2:12.8f}\n".format(time,sep,new_energy))
 
-        # Append information to data lists
-        time_list.append(time)
-        distance_list.append(sep)
-        energy_list.append(new_energy)
+            # Append information to data lists
+            time_list.append(time)
+            distance_list.append(sep)
+            energy_list.append(new_energy)
 
-        # Increase time
-        time = time + dt
+            # Increase time
+            time = time + dt
+
+        max_val=max(energy_list)
+        min_val=min(energy_list)
+        delta_E=max_val-min_val
+        fluctuation=abs(delta_E/energy_list[0])
+
+        dt_list.append(dt)
+        fluc_list.append(fluctuation)
 
     # Post-simulation:
-
+    pyplot.title('Velocity verlet: energy fluctuation vs timestep')
+    pyplot.xlabel('timestep')
+    pyplot.ylabel('energy fluctuation')
+    pyplot.plot(dt_list, fluc_list)
+    pyplot.show()
     # Close output file
     outfile.close()
 

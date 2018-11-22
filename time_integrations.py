@@ -230,60 +230,31 @@ def main():
     energy_list = []
 
     # Start the time integration loop
-    for i in range(numstep):
-        #use symplectic euler to get the new separations and new total energy after the time step
-        if sys.argv[3]=='euler':
-            new_data=symp_euler(particles,dt,D,alpha,r_e)
-        else:
-            new_data=verlet(particles,dt,D,alpha,r_e)
+# Post-simulation:
 
-        #get list of new separations
-        sep_list=new_data[0]
-
-        #get first element of sep_list
-        sep=float(sep_list[0])
-
-        #get  new total energy
-        new_energy=new_data[1]
+# Close output file
+outfile.close()
 
 
-        # Output particle information
-        outfile.write("{0:f} {1:f} {2:12.8f}\n".format(time,sep,new_energy))
+# Plot particle trajectory to screen
+if sys.argv[3]=='euler':
+    pyplot.title('Symplectic Euler: separation vs time')
+else:
+    pyplot.title('Velocity verlet: separation vs time')
+pyplot.xlabel('Time')
+pyplot.ylabel('Separation')
+pyplot.plot(time_list, distance_list)
+pyplot.show()
 
-        # Append information to data lists
-        time_list.append(time)
-        distance_list.append(sep)
-        energy_list.append(new_energy)
-
-        # Increase time
-        time = time + dt
-
-    
-    # Post-simulation:
-
-    # Close output file
-    outfile.close()
-
-    sep_vector=p1.separation(p2)
-    # Plot particle trajectory to screen
-    if sys.argv[3]=='euler':
-        pyplot.title('Symplectic Euler: separation vs time')
-    else:
-        pyplot.title('Velocity verlet: separation vs time')
-    pyplot.xlabel('Time')
-    pyplot.ylabel('Separation')
-    pyplot.plot(time_list, distance_list)
-    pyplot.show()
-
-    # Plot particle energy to screen
-    if sys.argv[3]=='euler':
-        pyplot.title('Symplectic Euler: total energy vs time')
-    else:
-        pyplot.title('Velocity verlet: total energy vs time')
-    pyplot.xlabel('Time')
-    pyplot.ylabel('Energy')
-    pyplot.plot(time_list, energy_list)
-    pyplot.show()
+# Plot particle energy to screen
+if sys.argv[3]=='euler':
+    pyplot.title('Symplectic Euler: total energy vs time')
+else:
+    pyplot.title('Velocity verlet: total energy vs time')
+pyplot.xlabel('Time')
+pyplot.ylabel('Energy')
+pyplot.plot(time_list, energy_list)
+pyplot.show()
 
 
 
