@@ -127,6 +127,7 @@ def main():
     energy_list = []
 
     # Start the time integration loop
+    
     for i in range(numstep):
         #use v_verlet to get the new separations and new total energy after the time step
 
@@ -155,21 +156,4 @@ def main():
     # Close output file
     outfile.close()
 
-    # Plot particle trajectory to screen
-    pyplot.title('Velocity verlet: separation vs time')
-    pyplot.xlabel('Time')
-    pyplot.ylabel('Separation')
-    pyplot.plot(time_list, distance_list)
-    pyplot.show()
-
-    # Plot particle energy to screen
-    pyplot.title('Velocity verlet: total energy vs time')
-    pyplot.xlabel('Time')
-    pyplot.ylabel('Energy')
-    pyplot.plot(time_list, energy_list)
-    pyplot.show()
-
-
-
-# Execute main method:
 main()
