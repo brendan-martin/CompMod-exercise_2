@@ -233,7 +233,7 @@ def main():
     for i in range(numstep):
         #use symplectic euler to get the new separations and new total energy after the time step
         if sys.argv[3]=='euler':
-            new_data=symp_euler(p1,p2,dt,D,alpha,r_e)
+            new_data=symp_euler(particles,dt,D,alpha,r_e)
         else:
             new_data=verlet(particles,dt,D,alpha,r_e)
 
@@ -258,7 +258,7 @@ def main():
         # Increase time
         time = time + dt
 
-        print(new_data[2])
+    
     # Post-simulation:
 
     # Close output file
