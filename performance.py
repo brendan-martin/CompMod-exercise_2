@@ -55,6 +55,22 @@ def pot_energy_morse(r_12, D, alpha,r_e):
     potential=float(D)*(((1.0-m.exp(-float(alpha)*(float(r_12)-float(r_e))))**2.0)-1.0)
     return potential
 
+def symp_euler(p1,p2,dt,D,alpha,r_e):
+    p1.leap_pos1st(dt)
+    p2.leap_pos1st(dt)
+
+    separation=np.linalg.norm(p1.separation(p2))
+
+    force=force_morse(p1,p2,D,alpha,r_e)
+
+    p1.leap_velocity(dt,force)
+    p2.leap_velocity(dt,-force)
+
+    tot_energy=pot_energy_morse(separation, D, alpha,r_e)+p1.kinetic_energy()+p2.kinetic_energy()
+
+    return [separation,tot_energy]
+
+
 def v_verlet(p1,p2,dt,D,alpha,r_e):
 
     force=force_morse(p1,p2, D, alpha,r_e)
@@ -76,9 +92,9 @@ def v_verlet(p1,p2,dt,D,alpha,r_e):
 
 def main():
 
-    if len(sys.argv)!=3:
+    if len(sys.argv)!=4:
         print("Wrong number of arguments.")
-        print("Usage: " + sys.argv[0] + "<input file>" + " <output file>")
+        print("Usage: " + sys.argv[0] + "<input file>" + " <output file>"+" method of time integration: either euler or verlet")
         quit()
     else:
         outfile_name = sys.argv[2]
@@ -122,14 +138,14 @@ def main():
     outfile.write("{0:f} {1:f} {2:12.8f}\n".format(time,distance,energy))
 
     constant=dt*numstep
-
+    #list to hold timesteps
     dt_list=[]
-
+    #list to hold energy fluctuations
     fluc_list=[]
 
     # Start the time integration loop
 
-    for dt in np.linspace(0.01,0.5,300):
+    for dt in np.linspace(0.01,0.5,400):
 
         # Initialise data lists for plotting later
         time_list = []
@@ -139,9 +155,11 @@ def main():
         numstep=int(constant/dt)
 
         for i in range(numstep):
-            #use v_verlet to get the new separations and new total energy after the time step
-
-            new_data=v_verlet(p1,p2,dt,D,alpha,r_e)
+            #use time integration method to get the new separations and new total energy after the time step
+            if sys.argv[3]=='euler':
+                new_data=symp_euler(p1,p2,dt,D,alpha,r_e)
+            else:
+                new_data=v_verlet(p1,p2,dt,D,alpha,r_e)
 
             #get new separation
             sep=new_data[0]
@@ -160,16 +178,36 @@ def main():
 
             # Increase time
             time = time + dt
-
+        #find the maximum energy fluctuation for a given dt
         max_val=max(energy_list)
         min_val=min(energy_list)
         delta_E=max_val-min_val
         fluctuation=abs(delta_E/energy_list[0])
-
+        #add the dt and the corresponding energy fluctuation to lists
         dt_list.append(dt)
         fluc_list.append(fluctuation)
 
     # Post-simulation:
+
+    #find the maximum dt such that the energy fluctuation is less than 0.001
+    for i in range(len(fluc_list)):
+        if fluc_list[i]<0.001:
+            continue
+        elif i==0 and fluc_list[i]<0.001:
+            print("the largest energy fluctuation less than 0.001 is:"+str(fluc_list[i]))
+            print("the maximum timestep that can be used so that the energy fluctuation is less than 0.001 is:"+str(dt_list[i]))
+            break
+        elif i==0 and fluc_list[i]>0.001:
+            print("there is no energy fluctuation less than 0.001")
+            break
+        else:
+            print("the largest energy fluctuation less than 0.001 is:"+str(fluc_list[i-1]))
+            print("the maximum timestep that can be used so that the energy fluctuation is less than 0.001 is:"+str(dt_list[i-1]))
+            break
+
+
+
+    #plot of dt vs energy fluctuation
     pyplot.title('Velocity verlet: energy fluctuation vs timestep')
     pyplot.xlabel('timestep')
     pyplot.ylabel('energy fluctuation')
