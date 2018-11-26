@@ -118,7 +118,7 @@ def main():
     r_e=tokens[1]
 
     dt = 0.01
-    numstep = 3000
+    numstep = 2000
     time = 0.0
 
     #set up the initial state of the particles
@@ -137,7 +137,7 @@ def main():
     #write the initial time, initial separation and initial total energy to the output file
     outfile.write("{0:f} {1:f} {2:12.8f}\n".format(time,distance,energy))
 
-    constant=dt*numstep
+    tot_time=dt*numstep
     #list to hold timesteps
     dt_list=[]
     #list to hold energy fluctuations
@@ -145,14 +145,14 @@ def main():
 
     # Start the time integration loop
 
-    for dt in np.linspace(0.01,0.5,400):
+    for dt in np.linspace(0.01,0.14,400):
 
         # Initialise data lists for plotting later
         time_list = []
         distance_list = []
         energy_list = []
 
-        numstep=int(constant/dt)
+        numstep=int(tot_time/dt)
 
         for i in range(numstep):
             #use time integration method to get the new separations and new total energy after the time step
@@ -178,11 +178,8 @@ def main():
 
             # Increase time
             time = time + dt
-        #find the maximum energy fluctuation for a given dt
-        max_val=max(energy_list)
-        min_val=min(energy_list)
-        delta_E=max_val-min_val
-        fluctuation=abs(delta_E/energy_list[0])
+        #find fluctuation
+        fluctuation=abs((max(energy_list)-min(energy_list))/energy_list[0])
         #add the dt and the corresponding energy fluctuation to lists
         dt_list.append(dt)
         fluc_list.append(fluctuation)
@@ -191,24 +188,18 @@ def main():
 
     #find the maximum dt such that the energy fluctuation is less than 0.001
     for i in range(len(fluc_list)):
-        if fluc_list[i]<0.001:
-            continue
-        elif i==0 and fluc_list[i]<0.001:
-            print("the largest energy fluctuation less than 0.001 is:"+str(fluc_list[i]))
-            print("the maximum timestep that can be used so that the energy fluctuation is less than 0.001 is:"+str(dt_list[i]))
-            break
-        elif i==0 and fluc_list[i]>0.001:
-            print("there is no energy fluctuation less than 0.001")
-            break
-        else:
-            print("the largest energy fluctuation less than 0.001 is:"+str(fluc_list[i-1]))
-            print("the maximum timestep that can be used so that the energy fluctuation is less than 0.001 is:"+str(dt_list[i-1]))
+        if fluc_list[len(fluc_list) - 1 -i]<0.001:
+            print("the largest energy fluctuation less than 0.001 is:"+str(fluc_list[len(fluc_list) - 1 -i]))
+            print("the maximum timestep that can be used so that the energy fluctuation is less than 0.001 is:"+str(dt_list[len(fluc_list) - 1 -i]))
             break
 
 
 
     #plot of dt vs energy fluctuation
-    pyplot.title('Velocity verlet: energy fluctuation vs timestep')
+    if sys.argv[3]=='euler':
+        pyplot.title('Symplectic Euler: energy fluctuation vs timestep')
+    else:
+        pyplot.title('Velocity verlet: energy fluctuation vs timestep')
     pyplot.xlabel('timestep')
     pyplot.ylabel('energy fluctuation')
     pyplot.plot(dt_list, fluc_list)

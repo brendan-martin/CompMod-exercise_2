@@ -33,11 +33,11 @@ def force_morse(p1,p2, D, alpha,r_e):
     #the magnitude of the particles' separation
     r_12=np.linalg.norm(Particle3D.separation(p1,p2))
     #the force on p1 due to p2
-    coeff = (-2.0*float(alpha)*float(D)*(1.0-m.exp(-1.0*float(alpha)*(float(r_12)-float(r_e))))*(m.exp(-1.0*float(alpha)*(float(r_12)-float(r_e)))))*(1.0/(float(r_12)))
-    force=float(coeff)*Particle3D.separation(p1,p2)
+    force=(-2*alpha*D*(1-math.exp(-alpha*(r_12-r_e)))*(math.exp(-alpha*(r_12-r_e))))*(1/r_12)*(Particle3D.separation(p1,p2))
     return force
 
-def pot_energy_morse(r_12, D, alpha,r_e):
+
+def morse_pot(r_12, D, alpha,r_e):
     """
     Method to return the potential energy of particle
     in a morse potential.
@@ -52,8 +52,9 @@ def pot_energy_morse(r_12, D, alpha,r_e):
 
     """
 
-    potential=float(D)*(((1.0-m.exp(-float(alpha)*(float(r_12)-float(r_e))))**2.0)-1.0)
+    potential=D*(((1.0-math.exp(-alpha*(r_12-r_e)))**2.0)-1.0)
     return potential
+
 
 def v_verlet(p1,p2,dt,D,alpha,r_e):
 
@@ -69,7 +70,7 @@ def v_verlet(p1,p2,dt,D,alpha,r_e):
 
     separ=np.linalg.norm(Particle3D.separation(p1,p2))
 
-    tot_ener= pot_energy_morse(separ, D, alpha,r_e)+p1.kinetic_energy()+p2.kinetic_energy()
+    tot_ener= morse_pot(separ, D, alpha,r_e)+p1.kinetic_energy()+p2.kinetic_energy()
 
 
     return [separ,tot_ener]
@@ -101,8 +102,8 @@ def main():
     alpha=tokens[2]
     r_e=tokens[1]
 
-    dt = 0.01
-    numstep = 3000
+    dt = 0.09
+    numstep = 213
     time = 0.0
 
     #set up the initial state of the particles
@@ -116,7 +117,7 @@ def main():
     distance=np.linalg.norm(sep_vector)
 
     #get the total initial energy of the system
-    energy=Particle3D.kinetic_energy(p1)+Particle3D.kinetic_energy(p2)+pot_energy_morse(distance, D, alpha,r_e)
+    energy=Particle3D.kinetic_energy(p1)+Particle3D.kinetic_energy(p2)+morse_pot(distance, D, alpha,r_e)
 
     #write the initial time, initial separation and initial total energy to the output file
     outfile.write("{0:f} {1:f} {2:12.8f}\n".format(time,distance,energy))

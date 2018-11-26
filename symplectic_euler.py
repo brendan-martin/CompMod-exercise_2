@@ -10,7 +10,7 @@ saves both to file.
 """
 
 import sys
-import math as m
+import math
 import numpy as np
 import matplotlib.pyplot as pyplot
 from Particle3D import Particle3D
@@ -33,8 +33,7 @@ def force_morse(p1,p2, D, alpha,r_e):
     #the magnitude of the particles' separation
     r_12=np.linalg.norm(Particle3D.separation(p1,p2))
     #the force on p1 due to p2
-    coeff = (-2.0*float(alpha)*float(D)*(1.0-m.exp(-1.0*float(alpha)*(float(r_12)-float(r_e))))*(m.exp(-1.0*float(alpha)*(float(r_12)-float(r_e)))))*(1.0/(float(r_12)))
-    force=float(coeff)*Particle3D.separation(p1,p2)
+    force=(-2*alpha*D*(1-math.exp(-alpha*(r_12-r_e)))*(math.exp(-alpha*(r_12-r_e))))*(1/r_12)*(Particle3D.separation(p1,p2))
     return force
 
 def pot_energy_morse(r_12, D, alpha,r_e):
@@ -52,7 +51,7 @@ def pot_energy_morse(r_12, D, alpha,r_e):
 
     """
 
-    potential=float(D)*(((1.0-m.exp(-float(alpha)*(float(r_12)-float(r_e))))**2.0)-1.0)
+    potential=D*(((1.0-math.exp(-alpha*(r_12-r_e)))**2.0)-1.0)
     return potential
 
 
@@ -94,9 +93,9 @@ def main():
     tokens=constants.split(",")
 
     #set up initial parameters for particles
-    D=tokens[0]
-    alpha=tokens[2]
-    r_e=tokens[1]
+    D=float(tokens[0])
+    alpha=float(tokens[2])
+    r_e=float(tokens[1])
 
     dt = 0.01
     numstep = 2000
