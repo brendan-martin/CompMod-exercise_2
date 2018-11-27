@@ -36,7 +36,7 @@ def force_morse(p1,p2, D, alpha,r_e):
     force=(-2*alpha*D*(1-math.exp(-alpha*(r_12-r_e)))*(math.exp(-alpha*(r_12-r_e))))*(1/r_12)*(Particle3D.separation(p1,p2))
     return force
 
-def pot_energy_morse(r_12, D, alpha,r_e):
+def morse_pot(r_12, D, alpha,r_e):
     """
     Method to return the potential energy of particle
     in a morse potential.
@@ -45,7 +45,7 @@ def pot_energy_morse(r_12, D, alpha,r_e):
 
     :param r_12: the distance between the two particles for which we are finding the pair potential
     :param D: parameter D from morse potential
-    :param alpha: parapot_energy_morse(r_12, D, alpha,r_e)meter alpha from morse potential
+    :param alpha: paramorse_pot(r_12, D, alpha,r_e)meter alpha from morse potential
     :param r_e: parameter r_e from morse potential
     :return: potential energy of particle p1 due to morse potential as float
 
@@ -66,7 +66,7 @@ def symp_euler(p1,p2,dt,D,alpha,r_e):
     p1.leap_velocity(dt,force)
     p2.leap_velocity(dt,-force)
 
-    tot_energy=pot_energy_morse(separation, D, alpha,r_e)+p1.kinetic_energy()+p2.kinetic_energy()
+    tot_energy=morse_pot(separation, D, alpha,r_e)+p1.kinetic_energy()+p2.kinetic_energy()
 
     return [separation,tot_energy]
 
@@ -112,7 +112,7 @@ def main():
     distance=np.linalg.norm(sep_vector)
 
     #get the total initial energy of the system
-    energy=Particle3D.kinetic_energy(p1)+Particle3D.kinetic_energy(p2)+pot_energy_morse(distance, D, alpha,r_e)
+    energy=Particle3D.kinetic_energy(p1)+Particle3D.kinetic_energy(p2)+morse_pot(distance, D, alpha,r_e)
 
     #write the initial time, initial separation and initial total energy to the output file
     outfile.write("{0:f} {1:f} {2:12.8f}\n".format(time,distance,energy))

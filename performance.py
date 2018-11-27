@@ -145,7 +145,7 @@ def main():
 
     # Start the time integration loop
 
-    for dt in np.linspace(0.01,0.14,400):
+    for dt in np.linspace(0.001,0.15,500):
 
         # Initialise data lists for plotting later
         time_list = []
@@ -179,7 +179,7 @@ def main():
             # Increase time
             time = time + dt
         #find fluctuation
-        fluctuation=abs((max(energy_list)-min(energy_list))/energy_list[0])
+        fluctuation=abs((max(energy_list)-min(energy_list))/np.mean(energy_list))
         #add the dt and the corresponding energy fluctuation to lists
         dt_list.append(dt)
         fluc_list.append(fluctuation)

@@ -10,7 +10,7 @@ saves both to file.
 """
 
 import sys
-import math as m
+import math
 import numpy as np
 import matplotlib.pyplot as pyplot
 from Particle3D import Particle3D
@@ -98,12 +98,12 @@ def main():
     tokens=constants.split(",")
 
     #set up initial parameters for particles
-    D=tokens[0]
-    alpha=tokens[2]
-    r_e=tokens[1]
+    D=float(tokens[0])
+    alpha=float(tokens[2])
+    r_e=float(tokens[1])
 
-    dt = 0.09
-    numstep = 213
+    dt = 0.1091
+    numstep = 183
     time = 0.0
 
     #set up the initial state of the particles
@@ -152,12 +152,12 @@ def main():
         time = time + dt
 
     # Post-simulation:
-
+    print(max(distance_list))
     # Close output file
     outfile.close()
 
     # Plot particle trajectory to screen
-    pyplot.title('Velocity verlet: separation vs time')
+    pyplot.title('Velocity verlet: separation vs time for O_2')
     pyplot.xlabel('Time')
     pyplot.ylabel('Separation')
     pyplot.plot(time_list, distance_list)
